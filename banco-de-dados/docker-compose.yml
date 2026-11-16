@@ -1,0 +1,47 @@
+services:
+  db_postgres:
+    image: postgres:16-alpine
+    container_name: orion_postgres_db
+    environment:
+      POSTGRES_USER: orion_user
+      POSTGRES_PASSWORD: orion_password
+      POSTGRES_DB: orion_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "orion_user", "-d", "orion_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orion_network
+
+  db_mongo:
+    image: mongo:latest
+    container_name: orion_mongo_db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: orion_admin
+      MONGO_INITDB_ROOT_PASSWORD: orion_admin_pass
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orion_network
+
+volumes:
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+
+networks:
+  orion_network:
+    driver: bridge
